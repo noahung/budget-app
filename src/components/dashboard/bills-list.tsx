@@ -16,12 +16,12 @@ import type { Bill } from './balance-view'
 import { formatCurrency } from '@/lib/utils'
 
 interface BillsListProps {
-  bills: Bill[]
+  bills: Bill[] | null
   addBill: (name: string, amount: number) => void
   deleteBill: (id: string) => void
 }
 
-export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
+export function BillsList({ bills = [], addBill, deleteBill }: BillsListProps) {
   const formRef = React.useRef<HTMLFormElement>(null)
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
