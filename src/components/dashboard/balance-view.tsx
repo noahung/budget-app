@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useEffect } from 'react'
+import { useMemo } from 'react'
 import { IncomeCard } from './income-card'
 import { BillsList } from './bills-list'
 import { SummaryCard } from './summary-card'
@@ -8,7 +8,6 @@ import { BalancePieChart } from './balance-pie-chart'
 import { useFirebase, useMemoFirebase } from '@/firebase'
 import { collection, doc } from 'firebase/firestore'
 import { useCollection, useDoc } from '@/firebase'
-import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login'
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates'
 
 export interface Bill {
@@ -20,13 +19,7 @@ export interface Bill {
 }
 
 export function BalanceView() {
-  const { auth, firestore, user, isUserLoading } = useFirebase();
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      initiateAnonymousSignIn(auth);
-    }
-  }, [isUserLoading, user, auth]);
+  const { firestore, user, isUserLoading } = useFirebase();
 
   const userRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData } = useDoc(userRef);
