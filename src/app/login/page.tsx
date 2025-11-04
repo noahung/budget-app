@@ -6,7 +6,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <header className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tight">
-            BalanceView
+            Anna's budget
           </h1>
           <p className="text-muted-foreground mt-2">
             Sign in or create an account to manage your finances.

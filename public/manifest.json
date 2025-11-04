@@ -1,7 +1,6 @@
 {
-  "name": "BalanceView",
-  "short_name": "BalanceView",
-  "description": "A simple way to track your income, bills, and balance.",
+  "name": "Anna's budget",
+  "short_name": "Anna's budget",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

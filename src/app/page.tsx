@@ -37,7 +37,7 @@ export default function Home() {
         <header className="flex justify-between items-center mb-12">
           <div className="text-left">
             <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground tracking-tight">
-              BalanceView
+              Anna's budget
             </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl">
               A clean and simple way to track your monthly income and bills.
@@ -48,7 +48,7 @@ export default function Home() {
             Logout
           </Button>
         </header>
-        <BalanceView />
+        <BalanceView key={user.uid} />
       </main>
     </>
   );

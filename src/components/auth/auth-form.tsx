@@ -45,7 +45,9 @@ export function AuthForm() {
   });
 
   const onSubmit = async (data: AuthFormData) => {
+    console.log("AuthForm: onSubmit triggered.", { isLogin, data: { email: data.email } });
     if (!auth) {
+      console.error("AuthForm: Firebase auth is not initialized.");
       toast({
         variant: "destructive",
         title: "Authentication Error",
@@ -57,20 +59,25 @@ export function AuthForm() {
     setLoading(true);
     try {
       if (isLogin) {
+        console.log("AuthForm: Attempting to sign in...");
         await signInWithEmailAndPassword(auth, data.email, data.password);
+        console.log("AuthForm: Sign in successful.");
       } else {
+        console.log("AuthForm: Attempting to create user...");
         await createUserWithEmailAndPassword(auth, data.email, data.password);
+        console.log("AuthForm: User creation successful.");
       }
       // The onAuthStateChanged listener in the provider will handle the redirect.
-      // setLoading will be implicitly reset on successful navigation.
+      // We don't need to setLoading(false) here because the component will unmount on redirect.
+      console.log("AuthForm: Auth action completed, waiting for redirect.");
     } catch (error: any) {
-      console.error(error);
+      console.error("AuthForm: Authentication failed.", { code: error.code, message: error.message });
       toast({
         variant: "destructive",
         title: "Authentication Failed",
         description: error.message || "An unexpected error occurred.",
       });
-      setLoading(false); // Reset loading on error
+      setLoading(false); // Reset loading state on error
     }
   };
 

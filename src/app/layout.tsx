@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'BalanceView',
+  title: "Anna's budget",
   description: 'A simple way to track your income, bills, and balance.',
   manifest: '/manifest.json',
   themeColor: '#ffffff',
