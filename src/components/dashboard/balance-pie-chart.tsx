@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Bill } from "@/components/dashboard/balance-view"
 
 interface BalancePieChartProps {
-  bills: Bill[]
+  bills: Bill[] | null
   balance: number
   income: number
 }
@@ -28,7 +28,8 @@ const chartColors = [
 
 export function BalancePieChart({ bills, balance, income }: BalancePieChartProps) {
   const chartData = React.useMemo(() => {
-    const data = bills.map((bill, index) => ({
+    const billList = bills || []
+    const data = billList.map((bill, index) => ({
       name: bill.name,
       value: bill.amount,
       fill: chartColors[index % chartColors.length],
@@ -46,13 +47,14 @@ export function BalancePieChart({ bills, balance, income }: BalancePieChartProps
   }, [bills, balance])
 
   const chartConfig = React.useMemo(() => {
+    const billList = bills || []
     const config: ChartConfig = {
       remaining: {
         label: "Remaining",
         color: "hsl(var(--accent))",
       },
     }
-    bills.forEach((bill, index) => {
+    billList.forEach((bill, index) => {
       config[bill.name] = {
         label: bill.name,
         color: chartColors[index % chartColors.length],
