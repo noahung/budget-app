@@ -1,7 +1,7 @@
 {
   "name": "Anna's budget",
   "short_name": "Anna's budget",
-  "start_url": "/",
+  "start_url": "/budget-app/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",

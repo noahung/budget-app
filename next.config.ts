@@ -8,8 +8,17 @@ const pwaConfig = withPWA({
   disable: process.env.NODE_ENV === 'development',
 });
 
+// GitHub Pages for a repo-site will serve the app at /<repo>/
+// set basePath and assetPrefix in production so exported files reference the correct paths.
+const REPO_NAME = 'budget-app';
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  // export the site as static files (next export)
+  output: 'export',
+  // when deployed to GitHub Pages the site will be served under /budget-app
+  basePath: process.env.NODE_ENV === 'production' ? `/${REPO_NAME}` : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? `/${REPO_NAME}/` : '',
+  trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -17,6 +26,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
