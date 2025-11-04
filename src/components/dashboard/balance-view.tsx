@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useMemo, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import { IncomeCard } from './income-card'
 import { BillsList } from './bills-list'
 import { SummaryCard } from './summary-card'
 import { BalancePieChart } from './balance-pie-chart'
-import { useFirebase } from '@/firebase'
+import { useFirebase, useMemoFirebase } from '@/firebase'
 import { collection, doc } from 'firebase/firestore'
 import { useCollection, useDoc } from '@/firebase'
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login'
@@ -27,11 +27,11 @@ export function BalanceView() {
     }
   }, [isUserLoading, user, auth]);
 
-  const userRef = useMemo(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
+  const userRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData } = useDoc(userRef);
   const income = userData?.monthlyIncome ?? 0;
 
-  const billsCollectionRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'bills') : null, [firestore, user]);
+  const billsCollectionRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'bills') : null, [firestore, user]);
   const { data: bills = [] } = useCollection<Omit<Bill, 'id'>>(billsCollectionRef);
 
   const totalBills = useMemo(() => {
