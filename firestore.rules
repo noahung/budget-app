@@ -12,7 +12,7 @@
  *   the authenticated user matching the userId in the path.
  *
  * Key Security Decisions:
- * - Only authenticated users (not anonymous) can access data.
+ * - Only authenticated users can access data.
  * - No user listing is allowed.
  * - Read and write access is determined by path-based ownership, ensuring users can
  *   only manage their own data.
@@ -38,12 +38,14 @@ service cloud.firestore {
     /**
      * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (create, get, update, delete) An authenticated user can manage their own profile.
+     * @allow (create) An authenticated user can create their own profile.
+     * @allow (get, update, delete) An authenticated user can manage their own profile.
      * @deny (any) An authenticated user cannot access another user's profile.
      * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow get, update, delete: if isAuthenticated() && isOwner(userId);
       allow list: if false;
     }
 
