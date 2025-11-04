@@ -41,13 +41,18 @@
         "amount": {
           "type": "number",
           "description": "The amount of the bill in GBP."
+        },
+        "paymentDate": {
+          "type": "number",
+          "description": "The day of the month the bill is due (1-31)."
         }
       },
       "required": [
         "id",
         "userId",
         "name",
-        "amount"
+        "amount",
+        "paymentDate"
       ]
     }
   },

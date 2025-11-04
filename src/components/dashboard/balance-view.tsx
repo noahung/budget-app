@@ -15,6 +15,7 @@ export interface Bill {
   id: string
   name: string
   amount: number,
+  paymentDate: number,
   userId?: string
 }
 
@@ -32,7 +33,7 @@ export function BalanceView() {
   const income = userData?.monthlyIncome ?? 0;
 
   const billsCollectionRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'bills') : null, [firestore, user]);
-  const { data: bills = [] } = useCollection<Omit<Bill, 'id'>>(billsCollectionRef);
+  const { data: bills } = useCollection<Omit<Bill, 'id'>>(billsCollectionRef);
 
   const totalBills = useMemo(() => {
     return (bills || []).reduce((acc, bill) => acc + bill.amount, 0)
@@ -49,11 +50,12 @@ export function BalanceView() {
     }
   };
   
-  const addBill = (name: string, amount: number) => {
-    if (!name || isNaN(amount) || amount <= 0 || !billsCollectionRef) return
+  const addBill = (name: string, amount: number, paymentDate: number) => {
+    if (!name || isNaN(amount) || amount <= 0 || !billsCollectionRef || isNaN(paymentDate)) return
     const newBill = {
       name,
       amount,
+      paymentDate
     }
     addDocumentNonBlocking(billsCollectionRef, newBill)
   }

@@ -14,11 +14,18 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import type { Bill } from './balance-view'
 import { formatCurrency } from '@/lib/utils'
+import { add, format } from 'date-fns'
 
 interface BillsListProps {
   bills: Bill[] | null
-  addBill: (name: string, amount: number) => void
+  addBill: (name: string, amount: number, paymentDate: number) => void
   deleteBill: (id: string) => void
+}
+
+function getOrdinal(day: number) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = day % 100;
+  return day + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
@@ -30,7 +37,8 @@ export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
     const formData = new FormData(event.currentTarget)
     const name = formData.get('billName') as string
     const amount = parseFloat(formData.get('billAmount') as string)
-    addBill(name, amount)
+    const paymentDate = parseInt(formData.get('paymentDate') as string, 10);
+    addBill(name, amount, paymentDate)
     formRef.current?.reset()
   }
 
@@ -46,7 +54,7 @@ export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 mb-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
           <Input
             name="billName"
             placeholder="Bill name (e.g., Internet)"
@@ -62,7 +70,17 @@ export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
             step="0.01"
             className="shadow-neumorphic-inset border-none focus-visible:ring-primary"
           />
-          <Button type="submit" className="shadow-neumorphic active:shadow-neumorphic-inset">
+          <Input
+            name="paymentDate"
+            type="number"
+            placeholder="Payment day (1-31)"
+            required
+            min="1"
+            max="31"
+            step="1"
+            className="shadow-neumorphic-inset border-none focus-visible:ring-primary"
+          />
+          <Button type="submit" className="shadow-neumorphic active:shadow-neumorphic-inset sm:col-span-3">
             <Plus className="mr-2 h-4 w-4" /> Add Bill
           </Button>
         </form>
@@ -80,6 +98,7 @@ export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
               >
                 <div>
                   <p className="font-medium">{bill.name}</p>
+                  <p className="text-sm text-muted-foreground">Due on the {getOrdinal(bill.paymentDate)}</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <p className="font-mono text-foreground">
