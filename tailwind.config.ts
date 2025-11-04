@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['PT Sans', 'sans-serif'],
+        headline: ['PT Sans', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -70,6 +70,10 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        'neumorphic': '6px 6px 12px hsl(var(--shadow-dark)), -6px -6px 12px hsl(var(--shadow-light))',
+        'neumorphic-inset': 'inset 6px 6px 12px hsl(var(--shadow-dark)), inset -6px -6px 12px hsl(var(--shadow-light))',
       },
       keyframes: {
         'accordion-down': {
