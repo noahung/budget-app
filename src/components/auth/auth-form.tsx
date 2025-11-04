@@ -29,7 +29,7 @@ export function AuthForm() {
     resolver: zodResolver(authSchema),
   });
 
-  const onSubmit = async (data: AuthFormData) => {
+  const onSubmit = (data: AuthFormData) => {
     setLoading(true);
     try {
       if (isLogin) {
@@ -45,8 +45,8 @@ export function AuthForm() {
         title: "Authentication Failed",
         description: error.message || "An unexpected error occurred.",
       });
+      setLoading(false); // Reset loading on error
     }
-    // No need to setLoading(false) here as the component will unmount on success
   };
 
   return (

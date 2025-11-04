@@ -10,7 +10,7 @@ export default function LoginPage() {
           </h1>
           <p className="text-muted-foreground mt-2">
             Sign in or create an account to manage your finances.
-          p>
+          </p>
         </header>
         <AuthForm />
       </div>
