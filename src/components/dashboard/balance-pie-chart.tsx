@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Pie, PieChart, Cell } from "recharts"
+import { Pie, PieChart, Cell, Label } from "recharts"
 
 import {
   ChartContainer,
@@ -29,22 +29,29 @@ const chartColors = [
 export function BalancePieChart({ bills, balance, income }: BalancePieChartProps) {
   const chartData = React.useMemo(() => {
     const billList = bills || []
-    const data = billList.map((bill, index) => ({
-      name: bill.name,
-      value: bill.amount,
-      fill: chartColors[index % chartColors.length],
-    }))
+    const total = income
+    const data = billList.map((bill, index) => {
+      const percentage = total > 0 ? Math.round((bill.amount / total) * 100) : 0
+      return {
+        name: bill.name,
+        value: bill.amount,
+        percentage,
+        fill: chartColors[index % chartColors.length],
+      }
+    })
 
     if (balance > 0) {
+      const percentage = total > 0 ? Math.round((balance / total) * 100) : 0
       data.push({
         name: "Remaining",
         value: balance,
+        percentage,
         fill: "hsl(var(--accent))",
       })
     }
 
     return data
-  }, [bills, balance])
+  }, [bills, balance, income])
 
   const chartConfig = React.useMemo(() => {
     const billList = bills || []
@@ -70,32 +77,51 @@ export function BalancePieChart({ bills, balance, income }: BalancePieChartProps
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         {income > 0 && chartData.length > 0 ? (
-          <ChartContainer
-            config={chartConfig}
-            className="mx-auto aspect-square max-h-[300px]"
-          >
-            <PieChart>
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent hideLabel />}
-              />
-              <Pie
-                data={chartData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={60}
-                strokeWidth={5}
-              >
-                {chartData.map((entry) => (
-                  <Cell
-                    key={entry.name}
-                    fill={entry.fill}
-                    className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          <div className="space-y-4">
+            <ChartContainer
+              config={chartConfig}
+              className="mx-auto aspect-square max-h-[250px]"
+            >
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                  strokeWidth={5}
+                  label={({ name, percentage }) => `${name} - ${percentage}%`}
+                  labelLine={{ stroke: "hsl(var(--foreground))", strokeWidth: 1 }}
+                >
+                  {chartData.map((entry) => (
+                    <Cell
+                      key={entry.name}
+                      fill={entry.fill}
+                      className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ChartContainer>
+            
+            {/* Custom legend */}
+            <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+              {chartData.map((entry) => (
+                <div key={entry.name} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full flex-shrink-0" 
+                    style={{ backgroundColor: entry.fill }}
                   />
-                ))}
-              </Pie>
-            </PieChart>
-          </ChartContainer>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {entry.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="flex items-center justify-center h-full min-h-[250px] text-muted-foreground text-center p-4">
             <p>Enter your income and some bills to see a breakdown of your spending.</p>

@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
 import { BalanceView } from '@/components/dashboard/balance-view';
-import { MonthlyOverview } from '@/components/dashboard/monthly-overview';
-import { LegacyDataMigration } from '@/components/dashboard/legacy-data-migration';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Calendar, Wallet } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LogOut, User } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
   const { user, isUserLoading, auth } = useFirebase();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('current');
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -27,9 +33,7 @@ export default function Home() {
     }
   };
 
-  const handleMonthSelect = (monthKey: string) => {
-    setActiveTab('current');
-  };
+  const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
 
   if (isUserLoading || !user) {
     return (
@@ -51,34 +55,42 @@ export default function Home() {
               A clean and simple way to track your monthly income and bills.
             </p>
           </div>
-          <Button variant="ghost" onClick={handleLogout} className="shadow-neumorphic active:shadow-neumorphic-inset">
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full shadow-neumorphic hover:shadow-neumorphic-inset">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">My Account</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
 
-        <LegacyDataMigration />
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-            <TabsTrigger value="current" className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              Current Month
-            </TabsTrigger>
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              All Months
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="current">
-            <BalanceView key={user.uid} />
-          </TabsContent>
-          
-          <TabsContent value="overview">
-            <MonthlyOverview onMonthSelect={handleMonthSelect} />
-          </TabsContent>
-        </Tabs>
+        <BalanceView key={user.uid} />
       </main>
     </>
   );

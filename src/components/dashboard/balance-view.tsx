@@ -5,6 +5,7 @@ import { IncomeCard } from './income-card'
 import { BillsList } from './bills-list'
 import { SummaryCard } from './summary-card'
 import { BalancePieChart } from './balance-pie-chart'
+import { MonthlyTrendChart } from './monthly-trend-chart'
 import { MonthSelector } from './month-selector'
 import { useFirebase, useMemoFirebase } from '@/firebase'
 import { collection, doc } from 'firebase/firestore'
@@ -18,6 +19,7 @@ export interface Bill {
   paymentDate: number,
   userId?: string
   recurring?: boolean  // If true, bill appears in all future months
+  paymentAccount?: string // Bank account used to pay this bill
 }
 
 // Helper to get month key in format "YYYY-MM"
@@ -61,13 +63,14 @@ export function BalanceView() {
     }
   };
   
-  const addBill = (name: string, amount: number, paymentDate: number, recurring: boolean = false) => {
+  const addBill = (name: string, amount: number, paymentDate: number, recurring: boolean = false, paymentAccount?: string) => {
     if (!name || isNaN(amount) || amount <= 0 || !billsCollectionRef || isNaN(paymentDate)) return
     const newBill = {
       name,
       amount,
       paymentDate,
-      recurring
+      recurring,
+      paymentAccount: paymentAccount || undefined
     }
     addDocumentNonBlocking(billsCollectionRef, newBill)
   }
@@ -92,8 +95,9 @@ export function BalanceView() {
           <BillsList bills={bills} addBill={addBill} deleteBill={deleteBill} />
         </div>
         <div className="lg:col-span-2 flex flex-col gap-8">
-          <SummaryCard income={income} totalBills={totalBills} balance={balance} />
+          <SummaryCard income={income} totalBills={totalBills} balance={balance} bills={bills || []} />
           <BalancePieChart income={income} bills={bills} balance={balance} />
+          <MonthlyTrendChart />
         </div>
       </div>
     </div>
