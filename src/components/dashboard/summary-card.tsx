@@ -64,24 +64,82 @@ export function SummaryCard({ income, totalBills, balance, bills }: SummaryCardP
   const getAIRecommendations = async () => {
     setIsLoadingAI(true);
     try {
-      const response = await fetch('/api/ai/recommendations', {
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_GENAI_API_KEY;
+      
+      if (!apiKey) {
+        console.error('Gemini API key not found');
+        return;
+      }
+
+      const currencySymbol = currency === 'USD' ? '$' : 
+                            currency === 'EUR' ? '€' : 
+                            currency === 'GBP' ? '£' : 
+                            currency === 'JPY' ? '¥' : 
+                            currency === 'CNY' ? '¥' : 
+                            currency === 'INR' ? '₹' : 
+                            currency === 'KRW' ? '₩' : 
+                            currency === 'THB' ? '฿' : 
+                            currency === 'VND' ? '₫' : 
+                            currency === 'IDR' ? 'Rp' : 
+                            currency === 'PHP' ? '₱' : 
+                            currency === 'MMK' ? 'K' : 
+                            currency;
+
+      const profileContext = profileData?.householdSize || profileData?.location || profileData?.occupation
+        ? `\n\nUser Profile:
+- Household size: ${profileData.householdSize || 'Not specified'}
+- Location: ${profileData.location || 'Not specified'}
+- Occupation: ${profileData.occupation || 'Not specified'}`
+        : '';
+
+      const billsContext = bills && bills.length > 0
+        ? `\n\nBills breakdown:
+${bills.map(b => `- ${b.name}: ${currencySymbol}${b.amount.toFixed(2)}${b.recurring ? ' (recurring)' : ''}`).join('\n')}`
+        : '';
+
+      const prompt = `You are a helpful personal finance advisor. Analyze the following monthly budget and provide a brief summary and personalized recommendations. Use ${currency} currency and ${currencySymbol} symbol in your response.
+
+Monthly Income: ${currencySymbol}${income.toFixed(2)}
+Total Bills: ${currencySymbol}${totalBills.toFixed(2)}
+Remaining Balance: ${currencySymbol}${balance.toFixed(2)}${profileContext}${billsContext}
+
+Provide your response in JSON format with this exact structure:
+{
+  "summary": "A brief 1-2 sentence summary of their financial situation",
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
+  "insights": "If profile information is available, include location-specific or occupation-specific insights"
+}
+
+Keep recommendations practical, encouraging, and specific to their situation. Use ${currencySymbol} when mentioning amounts.`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          income,
-          totalBills,
-          balance,
-          householdSize: profileData?.householdSize,
-          location: profileData?.location,
-          occupation: profileData?.occupation,
-          currency: currency,
-          bills: bills?.map(b => ({ name: b.name, amount: b.amount, recurring: b.recurring })),
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
         }),
       });
       
       if (response.ok) {
         const data = await response.json();
-        setAiRecommendation(data);
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        // Extract JSON from markdown code blocks if present
+        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/);
+        const jsonText = jsonMatch ? jsonMatch[1] : text;
+        
+        const aiData = JSON.parse(jsonText);
+        setAiRecommendation(aiData);
         setShowAI(true);
       }
     } catch (error) {

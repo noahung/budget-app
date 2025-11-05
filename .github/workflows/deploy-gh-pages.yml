@@ -25,6 +25,8 @@ jobs:
         run: npm ci
 
       - name: Build & Export
+        env:
+          NEXT_PUBLIC_GOOGLE_GENAI_API_KEY: ${{ secrets.GOOGLE_GENAI_API_KEY }}
         run: npm run export
 
       - name: Deploy to gh-pages
