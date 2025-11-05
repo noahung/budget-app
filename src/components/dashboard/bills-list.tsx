@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react'
-import { Plus, Receipt, Trash2 } from 'lucide-react'
+import { Plus, Receipt, Trash2, Repeat } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -12,13 +12,15 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import type { Bill } from './balance-view'
 import { formatCurrency } from '@/lib/utils'
 import { add, format } from 'date-fns'
 
 interface BillsListProps {
   bills: Bill[] | null
-  addBill: (name: string, amount: number, paymentDate: number) => void
+  addBill: (name: string, amount: number, paymentDate: number, recurring?: boolean) => void
   deleteBill: (id: string) => void
 }
 
@@ -30,6 +32,7 @@ function getOrdinal(day: number) {
 
 export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
   const formRef = React.useRef<HTMLFormElement>(null)
+  const [isRecurring, setIsRecurring] = React.useState(true)
   const billList = bills || [];
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -38,8 +41,9 @@ export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
     const name = formData.get('billName') as string
     const amount = parseFloat(formData.get('billAmount') as string)
     const paymentDate = parseInt(formData.get('paymentDate') as string, 10);
-    addBill(name, amount, paymentDate)
+    addBill(name, amount, paymentDate, isRecurring)
     formRef.current?.reset()
+    setIsRecurring(true) // Reset to default
   }
 
   return (
@@ -54,33 +58,51 @@ export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
-          <Input
-            name="billName"
-            placeholder="Bill name (e.g., Internet)"
-            required
-            className="shadow-neumorphic-inset border-none focus-visible:ring-primary"
-          />
-          <Input
-            name="billAmount"
-            type="number"
-            placeholder="Amount"
-            required
-            min="0.01"
-            step="0.01"
-            className="shadow-neumorphic-inset border-none focus-visible:ring-primary"
-          />
-          <Input
-            name="paymentDate"
-            type="number"
-            placeholder="Payment day (1-31)"
-            required
-            min="1"
-            max="31"
-            step="1"
-            className="shadow-neumorphic-inset border-none focus-visible:ring-primary"
-          />
-          <Button type="submit" className="shadow-neumorphic active:shadow-neumorphic-inset sm:col-span-3">
+        <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <Input
+              name="billName"
+              placeholder="Bill name (e.g., Internet)"
+              required
+              className="shadow-neumorphic-inset border-none focus-visible:ring-primary"
+            />
+            <Input
+              name="billAmount"
+              type="number"
+              placeholder="Amount"
+              required
+              min="0.01"
+              step="0.01"
+              className="shadow-neumorphic-inset border-none focus-visible:ring-primary"
+            />
+            <Input
+              name="paymentDate"
+              type="number"
+              placeholder="Payment day (1-31)"
+              required
+              min="1"
+              max="31"
+              step="1"
+              className="shadow-neumorphic-inset border-none focus-visible:ring-primary"
+            />
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="recurring" 
+              checked={isRecurring}
+              onCheckedChange={(checked) => setIsRecurring(checked === true)}
+            />
+            <Label 
+              htmlFor="recurring" 
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+            >
+              <Repeat className="h-4 w-4" />
+              Recurring bill (appears every month)
+            </Label>
+          </div>
+
+          <Button type="submit" className="shadow-neumorphic active:shadow-neumorphic-inset">
             <Plus className="mr-2 h-4 w-4" /> Add Bill
           </Button>
         </form>
@@ -97,7 +119,15 @@ export function BillsList({ bills, addBill, deleteBill }: BillsListProps) {
                 className="flex items-center justify-between p-3 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5"
               >
                 <div>
-                  <p className="font-medium">{bill.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{bill.name}</p>
+                    {bill.recurring && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary">
+                        <Repeat className="h-3 w-3" />
+                        Recurring
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">Due on the {getOrdinal(bill.paymentDate)}</p>
                 </div>
                 <div className="flex items-center gap-4">

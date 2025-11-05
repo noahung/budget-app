@@ -1,10 +1,11 @@
 "use client"
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { IncomeCard } from './income-card'
 import { BillsList } from './bills-list'
 import { SummaryCard } from './summary-card'
 import { BalancePieChart } from './balance-pie-chart'
+import { MonthSelector } from './month-selector'
 import { useFirebase, useMemoFirebase } from '@/firebase'
 import { collection, doc } from 'firebase/firestore'
 import { useCollection, useDoc } from '@/firebase'
@@ -16,16 +17,33 @@ export interface Bill {
   amount: number,
   paymentDate: number,
   userId?: string
+  recurring?: boolean  // If true, bill appears in all future months
+}
+
+// Helper to get month key in format "YYYY-MM"
+function getMonthKey(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  return `${year}-${month}`
 }
 
 export function BalanceView() {
   const { firestore, user, isUserLoading } = useFirebase();
+  const [selectedMonth, setSelectedMonth] = useState(new Date())
+  const monthKey = getMonthKey(selectedMonth)
 
-  const userRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-  const { data: userData } = useDoc(userRef);
-  const income = userData?.monthlyIncome ?? 0;
+  // Get monthly data for selected month
+  const monthDataRef = useMemoFirebase(() => 
+    user ? doc(firestore, 'users', user.uid, 'months', monthKey) : null, 
+    [firestore, user, monthKey]
+  );
+  const { data: monthData } = useDoc(monthDataRef);
+  const income = monthData?.monthlyIncome ?? 0;
 
-  const billsCollectionRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'bills') : null, [firestore, user]);
+  const billsCollectionRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'users', user.uid, 'months', monthKey, 'bills') : null, 
+    [firestore, user, monthKey]
+  );
   const { data: bills } = useCollection<Omit<Bill, 'id'>>(billsCollectionRef);
 
   const totalBills = useMemo(() => {
@@ -37,18 +55,19 @@ export function BalanceView() {
   }, [income, totalBills])
 
   const handleSetIncome = (newIncome: number) => {
-    if (userRef) {
+    if (monthDataRef) {
       const incomeValue = isNaN(newIncome) || newIncome < 0 ? 0 : newIncome;
-      setDocumentNonBlocking(userRef, { monthlyIncome: incomeValue }, { merge: true });
+      setDocumentNonBlocking(monthDataRef, { monthlyIncome: incomeValue }, { merge: true });
     }
   };
   
-  const addBill = (name: string, amount: number, paymentDate: number) => {
+  const addBill = (name: string, amount: number, paymentDate: number, recurring: boolean = false) => {
     if (!name || isNaN(amount) || amount <= 0 || !billsCollectionRef || isNaN(paymentDate)) return
     const newBill = {
       name,
       amount,
-      paymentDate
+      paymentDate,
+      recurring
     }
     addDocumentNonBlocking(billsCollectionRef, newBill)
   }
@@ -64,14 +83,18 @@ export function BalanceView() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-      <div className="lg:col-span-3 flex flex-col gap-8">
-        <IncomeCard income={income} setIncome={handleSetIncome} />
-        <BillsList bills={bills} addBill={addBill} deleteBill={deleteBill} />
-      </div>
-      <div className="lg:col-span-2 flex flex-col gap-8">
-        <SummaryCard income={income} totalBills={totalBills} balance={balance} />
-        <BalancePieChart income={income} bills={bills} balance={balance} />
+    <div className="flex flex-col gap-8">
+      <MonthSelector selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3 flex flex-col gap-8">
+          <IncomeCard income={income} setIncome={handleSetIncome} />
+          <BillsList bills={bills} addBill={addBill} deleteBill={deleteBill} />
+        </div>
+        <div className="lg:col-span-2 flex flex-col gap-8">
+          <SummaryCard income={income} totalBills={totalBills} balance={balance} />
+          <BalancePieChart income={income} bills={bills} balance={balance} />
+        </div>
       </div>
     </div>
   )
